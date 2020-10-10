@@ -1,6 +1,7 @@
 // Customer Class: Represents a Customer
 class Customer {
-    constructor(name, email, phone) {
+    constructor(id, name, email, phone) {
+        this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
@@ -10,19 +11,7 @@ class Customer {
 // UI Class: Handle UI tasks
 class UI {
     static displayCustomers() {
-        const StoredCustomers = [{
-                name: 'Harry Benneton',
-                email: 'hbenneton@mail.com',
-                phone: '999-555-555'
-            },
-            {
-                name: 'Cindy Foster',
-                email: 'cfoster@mail.com',
-                phone: '666-658-458'
-            }
-        ];
-
-        const customers = StoredCustomers;
+        const customers = Store.getCustomers();
 
         customers.forEach((customer) => UI.addCustomerToList(customer));
     }
@@ -36,6 +25,7 @@ class UI {
         <td>${customer.name}</td>
         <td>${customer.email}</td>
         <td>${customer.phone}</td>
+        <td>${customer.id}</td>
         <td><a href="#" class="btn btn-danger btn-sm delete">X</a></td>
         `;
 
@@ -61,6 +51,7 @@ class UI {
     }
 
     static clearFields() {
+        document.querySelector('#id').value = '';
         document.querySelector('#name').value = '';
         document.querySelector('#email').value = '';
         document.querySelector('#phone').value = '';
@@ -68,6 +59,38 @@ class UI {
 }
 
 // Store Class: Handles Storage
+class Store {
+    static getCustomers() {
+        let customers;
+        if (localStorage.getItem('customers') === null) {
+            customers = [];
+        } else {
+            customers = JSON.parse(localStorage.getItem('customers'));
+        }
+
+        return customers;
+    }
+
+    static addCustomer(customer) {
+        const customers = Store.getCustomers();
+
+        customers.push(customer);
+
+        localStorage.setItem('customers', JSON.stringify(customers))
+    }
+
+    static removeCustomer(id) {
+        const customers = Store.getCustomers();
+
+        customers.forEach((customer, index) => {
+            if (customer.id === id) {
+                customers.splice(index, 1);
+            }
+        });
+
+        localStorage.setItem('customers', JSON.stringify(customers));
+    }
+}
 
 // Event: Display Customers
 document.addEventListener('DOMContentLoaded', UI.displayCustomers);
@@ -78,19 +101,26 @@ document.querySelector('#customer-form').addEventListener('submit', (e) => {
     e.preventDefault();
 
     // Get form values
+    const id = document.querySelector('#id').value;
     const name = document.querySelector('#name').value;
     const email = document.querySelector('#email').value;
     const phone = document.querySelector('#phone').value;
 
     // Validate
-    if (name === '' || email === '' || phone === '') {
+    if (id === '' || name === '' || email === '' || phone === '') {
         UI.showAlert('Please fill in all fields', 'danger');
     } else {
         // Instantiate customer
-        const customer = new Customer(name, email, phone);
+        const customer = new Customer(id, name, email, phone);
 
         // Add Customer to UI
         UI.addCustomerToList(customer);
+
+        // Add Customer to Store
+        Store.addCustomer(customer);
+
+        // Show success message
+        UI.showAlert('Customer Added', 'success');
 
         // Clear fields
         UI.clearFields();
@@ -99,5 +129,12 @@ document.querySelector('#customer-form').addEventListener('submit', (e) => {
 
 // Event: Remove a Customer
 document.querySelector('#customer-list').addEventListener('click', (e) => {
+    // Remove customer from UI
     UI.deleteCustomer(e.target);
+
+    // Remove customer from store
+    Store.removeCustomer(e.target.parentElement.previousElementSibling.textContent);
+
+    // Show remove message
+    UI.showAlert('Customer Removed', 'success');
 });
