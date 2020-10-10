@@ -43,9 +43,21 @@ class UI {
     }
 
     static deleteCustomer(el) {
-        if(el.classList.contains('delete')) {
+        if (el.classList.contains('delete')) {
             el.parentElement.parentElement.remove();
         }
+    }
+
+    static showAlert(message, className) {
+        const div = document.createElement('div');
+        div.className = `alert alert-${className}`;
+        div.appendChild(document.createTextNode(message));
+        const container = document.querySelector('.container');
+        const form = document.querySelector('#customer-form');
+        container.insertBefore(div, form);
+
+        // Vanish in 3 seconds
+        setTimeout(() => document.querySelector('.alert').remove(), 3000);
     }
 
     static clearFields() {
@@ -70,14 +82,19 @@ document.querySelector('#customer-form').addEventListener('submit', (e) => {
     const email = document.querySelector('#email').value;
     const phone = document.querySelector('#phone').value;
 
-    // Instantiate customer
-    const customer = new Customer(name, email, phone);
+    // Validate
+    if (name === '' || email === '' || phone === '') {
+        UI.showAlert('Please fill in all fields', 'danger');
+    } else {
+        // Instantiate customer
+        const customer = new Customer(name, email, phone);
 
-    // Add Customer to UI
-    UI.addCustomerToList(customer);
+        // Add Customer to UI
+        UI.addCustomerToList(customer);
 
-    // Clear fields
-    UI.clearFields();
+        // Clear fields
+        UI.clearFields();
+    }
 })
 
 // Event: Remove a Customer
